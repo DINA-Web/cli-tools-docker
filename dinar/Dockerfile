@@ -1,4 +1,4 @@
-FROM rocker/ropensci 
+FROM rocker/ropensci:latest
 
 RUN install2.r --error \
 	getopt
