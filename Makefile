@@ -27,6 +27,13 @@ ul:
 	firefox https://archive.org/details/dw-datasets &
 
 dl:
+	@echo "Downloading DINA-Web Datasets using wget"
+	wget http://archive.org/download/dw-datasets/dw-datasets.tgz -O dw-datasets.tgz
+	mkdir -p cbt-data	
+	tar xvfz dw-datasets.tgz -C cbt-data
+	rm -rf dw-datasets.tgz
+
+dl-ia:
 	@echo "Downloading DINA-Web Datasets from Internet Archive into cbt-data"
 	ia download dw-datasets dw-datasets.tgz
 	mkdir -p cbt-data
