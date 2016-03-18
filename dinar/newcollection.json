@@ -1,0 +1,44 @@
+{
+        "userGroupScopeId":999990,
+        "catalogFormatNumName":"CatalogNumberString",
+        "code":"TEST_1",
+        "collectionId":999990,
+        "collectionName":"NRM Test collection 1",
+        "collectionType":"Preserved Specimen",
+        "description":"test creaate new collection",
+        "estimatedSize":0,
+        "isEmbeddedCollectingEvent":true,
+        "primaryFocus":"Physical Object",
+        "primaryPurpose":null,
+        "remarks":"test creaate new collection",
+        "createdByAgentID":{
+             "agentType":1,
+             "firstName":"samaterr"
+        },
+        "disciplineID":{
+            "userGroupScopeId":9999,
+            "disciplineId":9999,
+            "name":"Entomology",
+            "type":"insect",
+            "divisionID":{
+                "userGroupScopeId":9999,
+                "disciplineType":"insect",
+                "divisionId":9999,
+                "name":"Forskningsavdelningen",
+                "institutionID":{
+                    "userGroupScopeId":9999,
+                    "name":"Swedish Museum of Natural History",
+                    "code":"NRM",
+                    "institutionId":9999
+                }
+            },
+            "geographyTreeDefID":{
+                "name":"Chronos Stratigraphy"
+            },
+            "geologicTimePeriodTreeDefID":{
+                "name":"Chronos Stratigraphy"
+            },
+            "dataTypeID":{
+            }
+        }
+}

@@ -1,0 +1,51 @@
+fs.db:
+  image: tianon/true
+  volumes:
+    - ./mysql-shr:/shr:rw
+    - ./mysql-conf.d:/etc/mysql/conf.d:z
+    - ./mysql-datadir:/var/lib/mysql:rw
+    - ./mysql-autoload:/docker-entrypoint-initdb.d:rw
+
+fs.cbt:
+  image: tianon/true
+  volumes:
+    - ./cbt-data:/tmp:rw
+
+fs.dinar:
+  image: tianon/true
+  volumes:
+    - ./dinar-data:/home/rstudio:rw
+   
+db:
+  image: mysql:latest
+  environment:
+    - MYSQL_ROOT_PASSWORD=password12
+    - MYSQL_DATABASE=dina_nrm
+    - MYSQL_USER=dina
+    - MYSQL_PASSWORD=password12
+  ports:
+    - "3306:3306"
+  volumes_from:
+    - fs.db
+
+cbt:
+  build: cbt
+  volumes_from:
+    - fs.cbt
+  links:
+    - db
+
+dinar:
+  build: dinar
+  environment:
+    - VIRTUAL_HOST=wrangler.dina-web.net
+    - VIRTUAL_PORT=8787
+    - USER=rstudio
+    - PASSWORD=rstudio
+    - ROOT=TRUE
+  ports:
+    - "8787:8787"
+  volumes_from:
+    - fs.dinar
+  links:
+    - db
