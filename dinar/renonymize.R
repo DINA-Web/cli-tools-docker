@@ -4,10 +4,6 @@ library(purrr, quietly = TRUE)
 suppressPackageStartupMessages(library(dplyr, quietly = TRUE))
 library(RMySQL, quietly = TRUE)
 library(stringr, quietly = TRUE)
-
-#install.packages("getopt")
-#devtools::install_github("rstats-db/DBI")
-#devtools::install_github("rstats-db/RMySQL")
 library(getopt, quietly = TRUE)
 
 get_args <- function(args) {
@@ -89,7 +85,6 @@ if (!file.exists(db)) {
   q(status = 0)
 }
 
-
 cfg <- get_config(cfg, "MySQL")
 
 src_mysql_fixed <- function(dbname, host, port = 3306, user, password, ...) {
@@ -111,7 +106,6 @@ dina_db <- src_mysql_fixed(
   user = cfg$User, 
   password = cfg$Password)
 
-
 message("Reading name database")
 
 names_db <- src_sqlite(path = db)
@@ -123,49 +117,12 @@ girls <- names_df$girls
 lastnames <- names_df$lastnames
 surnames <- names_df$surnames
 
-
 message("Will now process agent, specifyuser, address, dnasequence")
 
 agent <- dina_db %>% tbl("agent") %>% collect
 user <- dina_db %>% tbl("specifyuser") %>% collect
 address <- dina_db %>% tbl("address") %>% collect
 dna <- dina_db %>% tbl("dnasequence") %>% collect
-
-#res <- dbDisconnect(con)
-
-unicode_df <- function(df) {
-  res <- data.frame(
-    stringsAsFactors = FALSE,  # this ensures columns will be chr rather than Factor
-    apply(df, MARGIN = 2,  # MARGIN = 2 means across cols, see docs!
-        function(x) iconv(x, from = "latin1", to = "UTF-8")))
-  return (res)
-}
-
-latin1_df <- function(df) {
-  res <- data.frame(
-    stringsAsFactors = FALSE,  # this ensures columns will be chr rather than Factor
-    apply(df, MARGIN = 2,  # MARGIN = 2 means across cols, see docs!
-          function(x) iconv(x, from = "UTF-8", to = "latin1")))
-  return (res)
-}
-
-
-#agent <- latin1_df(agent)
-#user <- latin1_df(user)
-#address <- latin1_df(address)
-#dna <- latin1_df(dna)
-
-cardinality_df <- function(df) {
-  uniques <- apply(df, MARGIN = 2,  # MARGIN = 2 means across cols, see docs!
-    function(x) unique(x))
-#  print(head(uniques))
-  u <- data.frame(t(data.frame(stringsAsFactors = FALSE, 
-    lapply(uniques, function(x) substr(iconv(paste(collapse = ", ", x), from = "latin1", to = "utf-8"), 1, 80)))))
-  n <- data.frame(t(data.frame(lapply(uniques, length))))
-  res <- data.frame(stringsAsFactors = FALSE, 
-    colnames = rownames(n), count_distinct = n[ ,1], unique_values_80 = u[ ,1])
-  return (res)
-}
 
 message("Now processing agent table data")
 
@@ -283,40 +240,6 @@ tbldf_enc <- function(tbl_df, encoding = "latin1") {
   return (tbl_df(res))
 }
 
-
-upsert_df <- function(df, dplyr_con, table) {
-  con <- dplyr_con$con
-  details <- dbGetQuery(con, "show variables like 'character_set_%'")  
-  db_enc <- 
-    details %>% 
-    filter(Variable_name == "character_set_database") %>%
-    select(Value) %>% .$Value
-  message("Uploading to dbtable ", table, " using db enc: ", db_enc)
-  csvfile <- tempfile()
-  
-  write.table(tbldf_enc(df, "utf8"), 
-    csvfile, row.names = FALSE, fileEncoding = db_enc, 
-    na = "\\N", sep = ",", row.names = FALSE)
-  
-  anon_table <- paste0("anon_", table)
-  message("Checking if ", anon_table, " exists...")
-  if (dbExistsTable(con, name = anon_table)) 
-    dbRemoveTable(con, name = anon_table)
-  res <- dbWriteTable(con, anon_table, csvfile, overwrite = TRUE)
-  
-  message("Replacing ", table, " with ", anon_table, " ... ")
-  res <- dbSendQuery(con, "set foreign_key_checks = 0;")
-  sql <- paste0("replace into ", table, " select * from ", anon_table, ";")
-  res <- dbSendQuery(con, sql)
-  res <- dbGetQuery(con, "set foreign_key_checks = 1;")
-  
-  message("Removing ", anon_table)
-  res <- dbRemoveTable(con, name = anon_table)
-  return (res)
-}
-
-#upsert_df(address, dina_db, "address")
-
 # Upload the anonymized user table
 replaceTable <- function(dina_db, table, df) {
   
@@ -328,17 +251,10 @@ replaceTable <- function(dina_db, table, df) {
   if (dbExistsTable(con, name = anon_table)) 
     dbRemoveTable(con, name = anon_table)
 
-  #message("Setting utf8 names and character set...")
-  #res <- dbSendQuery(con, "set names 'utf8'")
-  #res <- dbSendQuery(con, 'set character set utf8')
-
-    
   message("Writing table ", anon_table, " to db ...")
-  res <- dbWriteTable(con, name = anon_table, value = as.data.frame(df), row.names = FALSE) 
-#  res <- copy_to(dina_db, tbldf_enc(df), name = anon_table)
-#  res <- copy_to(dina_db, tbldf_enc(df, "utf8"), anon_table, 
-#                 temporary = FALSE, overwrite = TRUE)
-  
+  res <- dbWriteTable(con, name = anon_table, 
+    value = as.data.frame(df), row.names = FALSE) 
+
  message("Replacing ", table, " with ", anon_table, " ... ")
  res <- dbSendQuery(con, "set foreign_key_checks = 0;")
  res <- dbSendQuery(con,
@@ -347,20 +263,9 @@ replaceTable <- function(dina_db, table, df) {
   
   message("Removing ", anon_table)
   res <- dbRemoveTable(con, name = anon_table)
-#  res <- dbDisconnect(con)
 }
 
 tables <- c("agent", "specifyuser", "address", "dnasequence")
-
-message("Writing changes to database")
-
-# TODO Check that character encodings are not messed up!
-
-message("Summary: ")
-#cardinality_df(user)
-#cardinality_df(address)
-#cardinality_df(agent)
-#cardinality_df(dna)
 
 message("Renonymizing database")
 user$Name[1] <- "nrmuser"
