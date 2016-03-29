@@ -241,7 +241,7 @@ tbldf_enc <- function(tbl_df, encoding = "latin1") {
 }
 
 # Upload the anonymized user table
-replaceTable <- function(dina_db, table, df) {
+replaceTable <- function(dina_db, table, df, delete = FALSE) {
   
   anon_table <- paste0("anon_", table)
   
@@ -257,6 +257,8 @@ replaceTable <- function(dina_db, table, df) {
 
  message("Replacing ", table, " with ", anon_table, " ... ")
  res <- dbSendQuery(con, "set foreign_key_checks = 0;")
+ if (delete) 
+   res <- dbSendQuery(con, paste("delete from", table, ";"))
  res <- dbSendQuery(con,
   paste0("replace into ", table, " select * from ", anon_table, ";"))
  res <- dbGetQuery(con, "set foreign_key_checks = 1;")
@@ -281,3 +283,21 @@ replaceTable(dina_db, "dnasequence", dna)
 
 message("Done ... ")
 message("The first user is now: ", user$Name[1])
+
+# message("Emptying geography table, leaving first row.")
+# geo <- 
+#   dina_db %>% 
+#   tbl("geography") %>% 
+#   filter(GeographyID == 1) %>%
+#   collect
+# 
+# replaceTable(dina_db, "geography", geo, TRUE)
+
+#message("Emptying taxonomy table, leaving first row.")
+#taxa <- 
+#  dina_db %>% 
+#  tbl("taxon") %>% 
+#  filter(TaxonID == 1) %>%
+#  collect
+
+#replaceTable(dina_db, "taxon", taxa, TRUE)

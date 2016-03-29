@@ -18,6 +18,14 @@ scrambledb:
 	@echo "Scrambling / renonymyzing db..."
 	./change_db_enc.sh
 	docker-compose run dinar ./renonymize.R
+	@echo "... and now sanitizing data ..."
+	mysql -u dina -ppassword12 -D dina_nrm -h 127.0.0.1 < sanitize_db.sql
+	@echo "Now please run make dumpdb to export a mysql dumpfile"
+
+dumpdb:
+	@echo "Dumping db... make sure you ran make scrambledb first ... creating dina_nrm.sql.gz"
+	mysqldump -u dina -ppassword12 -h 127.0.0.1 --databases dina_nrm > dina_nrm.sql
+	gzip dina_nrm.sql
 
 ul:
 	@echo "Packaging and uploading data from cbt-data to Internet Archive"
