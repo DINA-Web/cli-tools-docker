@@ -27,6 +27,10 @@ dumpdb:
 	mysqldump -u dina -ppassword12 -h 127.0.0.1 --databases dina_nrm > dina_nrm.sql
 	gzip dina_nrm.sql
 
+userdump:
+	@echo "Dumping users"
+	docker-compose run dinar ./userdump.R
+
 ul:
 	@echo "Packaging and uploading data from cbt-data to Internet Archive"
 	cd cbt-data/ && tar cvfz ../dw-datasets.tgz *.csv && cd ..
