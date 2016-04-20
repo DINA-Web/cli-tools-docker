@@ -14,7 +14,7 @@ fs.cbt:
 fs.dinar:
   image: tianon/true
   volumes:
-    - ./dinar-data:/home/rstudio:rw
+    - ./dinar-data:/tmp:rw
    
 db:
   image: mysql:latest
