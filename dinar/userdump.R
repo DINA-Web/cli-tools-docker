@@ -105,7 +105,7 @@ agent <- dina_db %>% tbl("agent") %>% collect
 res <- 
   user %>% 
   left_join(agent, by = "SpecifyUserID") %>%
-  select(AgentID, SpecifyUserID, Name, Password)
+  select(AgentID, SpecifyUserID, EMail, Name, Password)
 
 new_pass <- 
   readLines(paste0("https://www.random.org/passwords/?num=", 
@@ -114,6 +114,6 @@ new_pass <-
 res$new_pass <- new_pass
 
 message("Writing results to ", dest)
-write.csv(res, file = dest, row.names = FALSE)
+write.table(res, file = dest, sep = "\t", row.names = FALSE)
 
 if (!interactive()) q(save = "no", status = 0)
